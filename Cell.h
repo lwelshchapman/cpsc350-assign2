@@ -1,18 +1,22 @@
+/* 
+ * Logan Welsh
+ * 2325215
+ * lwelsh@chapman.edu
+ * CPSC-350-01
+ * Assignment 2: Game of Life
+ * Life.cpp
+ * Declaration of class for a single cell within a Game of Life grid.
+ */
+
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
 #include <string>
-//#include <typeinfo>
 
 using namespace std;
 
 
-//enum State { dead, alive, unknown };
-
-
 class Cell {
-
-
 
 	public:
 	
@@ -34,8 +38,8 @@ class Cell {
 		
 		
 		// GAME FUNCTIONALITY
-		void determineNext(int neighbors);
-		void advance();
+		void determineNext(int neighbors);	// Determine the cell's next state based on its current neighbors.
+		void advance();	// Shift to the next state.
 		
 		
 		// MISC
@@ -50,9 +54,5 @@ class Cell {
 
 		bool now;	// Cell's current state: false = empty; true = occupied.
 		bool nxt;	// Cell's state next generation: false = empty; true = occupied.
-
-
-
-
 
 };

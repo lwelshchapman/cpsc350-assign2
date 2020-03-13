@@ -1,3 +1,13 @@
+/* 
+ * Logan Welsh
+ * 2325215
+ * lwelsh@chapman.edu
+ * CPSC-350-01
+ * Assignment 2: Game of Life
+ * cli.cpp
+ * Command-Line Interface for running Game of Life.
+ */
+
 #include <iostream>
 #include <unistd.h>
 
@@ -12,7 +22,7 @@ int main(int argc, char** argv) {
 	// VARIABLES //
 	
 	// Option variables:
-	unsigned int autoTime = 50000;	// Number of nanoseconds to wait when automatically advancing.
+	unsigned int autoTime = 100000;	// Number of nanoseconds to wait when automatically advancing.
 	unsigned int stableMax = 3;	// Number of consecutive generations with the same amount of living cells needed to be considered "stable".
 
 	// Internal variables used by the program:
@@ -164,10 +174,7 @@ int main(int argc, char** argv) {
 	if(outputType > 0) {
 		cout << "Name for output file:\n  > ";
 		cin >> outPath;
-
 		outFile.open(outPath);
-		
-		
 		cout << endl;
 	}
 	
@@ -181,50 +188,47 @@ int main(int argc, char** argv) {
 	
 	cout << "BEGINNING SIMULATION." << endl;
 	
-	while(true) {
+	while( (!(life->isEmpty()) && !(life->isStable())) || (life->getGen() == 0) ) {
 		
 		// Output the current generation.
-		if(outputType == 0) {	// Automatic console
+		if(outputType > 0) {	// File output
+			outFile << life->getGridString();
+		}
+		else {					// Console output
 			cout << life->getGridString();
+		}
+
+
+		// Advance to the next generation.
+		life->scanNeighbors();
+		if(life->isStable()) {	// Checking here helps catch oscillations.
+			break;
+		}
+		life->nextGeneration();
+		
+		
+		// Wait if necessary.
+		if(outputType == 0) {		// Automatic console
 			usleep(autoTime);
 		}
 		else if(outputType < 0) {	// Manual console
-			cout << life->getGridString();
 			getchar();
 		}
-		else {	// File output
-			outFile << life->getGridString();
-		}
-	
-	
-	
-	
-		// Check if the simulation is finished.
-		if(life->isEmpty()) {
-			cout << "[Gen " << life->getGen() << ": Grid is empty; 0 living cells! ]" << endl;
-			break;
-		}
-		
-		if(life->isStable()) {
-			stableCount++;
-			if(stableCount == stableMax) {
-				cout << "[Gen " << life->getGen() << ": Grid is stable; " << stableMax << " consecutive gens with same amount of living cells!]" << endl;
-				break;
-			}
-		}
-		else {
-			stableCount = 0;
-		}
 		
 		
-		
-		
-		// Advance to the next generation.
-		life->scanNeighbors();
-		life->nextGeneration();
-	
 	}
 	
+	
+	
+	// Tell the user why the simulation is finishing.
+	string message = "";
+	if(life->isEmpty()) {
+		message = "Grid is empty; 0 living cells!";
+	}
+	else if(life->isStable()) {
+		message = "Grid is stable; Generation stagnant or oscillating!";
+	}
+	cout << "[Gen " << life->getGen() << ": " << message << "]" << endl;
 	cout << "SIMULATION COMPLETE." << endl;
 	
 	
@@ -232,8 +236,8 @@ int main(int argc, char** argv) {
 	
 	// CLEANUP //
 	
-	outFile.close();
-	delete life;
+	outFile.close();	// Close the file output stream.
+	delete life;	// Deallocate memory used by the Life object.
 	
 	return 0;
 }

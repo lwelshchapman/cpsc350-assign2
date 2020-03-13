@@ -1,3 +1,13 @@
+/* 
+ * Logan Welsh
+ * 2325215
+ * lwelsh@chapman.edu
+ * CPSC-350-01
+ * Assignment 2: Game of Life
+ * Life.cpp
+ * Definition of class for managing a 2D array of Cells.
+ */
+
 #include "Life.h"
 
 // CONSTRUCTORS //
@@ -22,50 +32,46 @@ Life::Life(string filename, int newMode = 0) {
 	ifstream inFile;
 	inFile.open(filename);
 	
-	// Check if opening the input file worked
-	if (!inFile.is_open()) {
-		cout << "oops" << endl;
-	}
-	
-	string temp = "";
-	
-	// Get first line, 
-	inFile >> temp;
-	int newX = stoi(temp);
-	
-	inFile >> temp;
-	int newY = stoi(temp);
-	
-	init(newX, newY, newMode);
-	
-	int i = -1;
-	
-	while(!inFile.eof()) {
-	
-		inFile >> temp;
+	// If opening the input file worked:
+	if (inFile.is_open()) {
+		string temp = "";
 		
-		i++;
-		for(int j = 0; j < temp.size(); ++j) {
+		// Get first line (# of columns).
+		inFile >> temp;
+		int newX = stoi(temp);
+		
+		// Get second line (# of rows).
+		inFile >> temp;
+		int newY = stoi(temp);
+		
+		// Initialize the Life object.
+		init(newX, newY, newMode);
+		
+		// Read in the grid map and set each cell accordingly.
+		int i = -1;
+		while(!inFile.eof() && (i < newX - 1)) {
 			
-			if(tolower(temp[j]) == 'x') {
-				grid[i][j]->setNow(true);
+			inFile >> temp;
+		
+			i++;
+			
+			for(int j = 0; j < temp.size(); ++j) {
+				
+				if(tolower(temp[j]) == 'x') {
+					grid[i][j]->setNow(true);
+				}
 			}
-			
 		}
-	
-	
+		
+		inFile.close();
+	}
+	// If opening the input file DID NOT WORK:
+	else {
+		cout << "There was a problem with opening that input file. Exiting." << endl;
+		exit(EXIT_FAILURE);
 	}
 	
-	inFile.close();
-	
 }
-
-/*
-Life::Life(Life other) {
-	
-	init(other->getX(), other->getY());
-}
-*/
 
 void Life::init(int newX, int newY, int newMode) {
 	srand(time(0));
@@ -74,8 +80,6 @@ void Life::init(int newX, int newY, int newMode) {
 	y = (newY > 0) ? newY : 10;
 	
 	mode = newMode;
-	
-	prevAlive = 0;
 	
 	genNum = 0;
 	
@@ -99,20 +103,6 @@ Life::~Life() {
 void Life::setMode(int newMode) {
 	mode = newMode;
 }
-
-/*
-void Life::setX(int newX) {
-
-	x = (newX > 0) ? newX : x;
-}
-*/
-
-/*
-void Life::setY(int newY) {
-	
-	y = (newY > 0) ? newY : y;
-}
-*/
 
 
 
@@ -138,21 +128,24 @@ int Life::getY() {
 
 
 // GAME FUNCTIONALITY //
-void Life::createGrid() {
+void Life::createGrid() {	// Initialize an empty grid.
 
 	grid = new Cell**[x];
-	
+	prevGrid = new string[x];
+
 	for(int i = 0; i < x; ++i) {
 		grid[i] = new Cell*[y];
-
+		prevGrid[i] = "";
 		for(int j = 0; j < y; ++j) {
 			grid[i][j] = new Cell();
+			prevGrid[i] += "-";
 		}
 	}
+	
 }
 
 
-void Life::randomGrid(double density) {
+void Life::randomGrid(double density) {	// Randomly populate a grid based on given parameters.
 	
 	if( (density > 0) && (density <= 1) ) {
 	
@@ -205,7 +198,7 @@ void Life::randomGrid(double density) {
 }
 
 
-void Life::scanNeighbors() {
+void Life::scanNeighbors() {	// Let each Cell determine its next state based on its current neighbors.
 	
 	for(int i = 0; i < x; ++i) {
 		for(int j = 0; j < y; ++j) {
@@ -264,21 +257,21 @@ void Life::scanNeighbors() {
 					}					
 				}
 			}
-			
+
 			grid[i][j]->determineNext(count);	// Cell determines its next state based on current neighbor amount.
 			
 		}
 	}
+	
+	
 }
 
 
-void Life::nextGeneration() {
+void Life::nextGeneration() {	// Advance each cell in the grid to its next state.
 	
-	prevAlive = countAlive();
+	saveToPrevGrid();
 	
 	++genNum;
-	
-	//previous = grid;
 	
 	for(int i = 0; i < x; ++i) {
 		for(int j = 0; j < y; ++j) {
@@ -291,16 +284,29 @@ void Life::nextGeneration() {
 }
 
 
-void Life::printGrid() {
-	/*
-	cout << "Gen: " << genNum << "\tDen: " << countAlive() / static_cast<double>(x * y) << endl;
-	cout << getGridString(false);
-	*/
+void Life::saveToPrevGrid() {	// Saves a record of the current grid (for checking if a grid is stable).
+	
+	for(int i = 0; i < x; ++i) {
+		
+		prevGrid[i] = "";
+		
+		for(int j = 0; j < y; ++j) {
+			
+			prevGrid[i] += grid[i][j]->getNow();
+		
+		}
+	}
+	
+}
+
+
+void Life::printGrid() {	// Prints the current grid.
+
 	cout << getGridString(true, false);
 }
 
 
-string Life::getGridString(bool withGen = true, bool spaces = false) {
+string Life::getGridString(bool withGen = true, bool spaces = false) {	// Returns a string representation of the current grid.
 	
 	string outStr = "";
 	
@@ -323,29 +329,26 @@ string Life::getGridString(bool withGen = true, bool spaces = false) {
 }
 
 
-bool Life::isEmpty() {
+bool Life::isEmpty() {	// Returns true if there are zero cells currently alive.
+	
+	return (countAlive() == 0);
+}
+
+
+bool Life::isStable() {	// Returns true if the next generation will be identical to the previous one.
 	
 	for(int i = 0; i < x; ++i) {
 		for(int j = 0; j < y; ++j) {
-
-			if( grid[i][j]->getNow() ) {
+			if(grid[i][j]->getNxt() != prevGrid[i][j]) {
 				return false;
 			}
 		}
 	}
-	
 	return true;
 }
 
 
-bool Life::isStable() {
-	
-	return prevAlive == countAlive();
-
-}
-
-
-int Life::countAlive() {
+int Life::countAlive() {	// Returns the number of currently living cells.
 	
 	int alive = 0;
 	

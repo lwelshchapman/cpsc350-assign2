@@ -1,3 +1,13 @@
+/* 
+ * Logan Welsh
+ * 2325215
+ * lwelsh@chapman.edu
+ * CPSC-350-01
+ * Assignment 2: Game of Life
+ * Life.cpp
+ * Definition of class for a single cell within a Game of Life grid.
+ */
+
 #include "Cell.h"
 
 
@@ -141,16 +151,3 @@ string Cell::toString(bool fancy = false) {
 }
 
 
-
-/*
-int main() {
-	
-	Cell *ohBoy = new Cell();
-	
-	cout << ohBoy->toChar() << endl;
-	
-	delete ohBoy;
-	
-	return 0;
-}
-*/
